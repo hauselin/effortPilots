@@ -1,0 +1,4 @@
+effortLevel,nDots,coherence,dotFrames,speed,dotDirections,participant,age,scriptDate,startTime,endTime,refreshRate,fixationFrames,fixationS,trialNo,blockType,task,targetFrames,targetS,blockNumber,elapsedTime,resp,rt,iti,responseTTL,overallTrialNum,keypress,acc,creditsEarned
+0,10.0,0.4,3.0,0.01,270,57,27,151018,2018-10-18-11-14-00,2018-10-18-11-14-43,60,90,1.5,1,dotMotionPracticeEasy,dotMotionPracticeEasy,180,10800,1,43.263309955596924,,,0.55,,1,,0,0
+1,100.0,0.6,3.0,0.01,180,57,27,151018,2018-10-18-11-14-00,2018-10-18-11-14-49,60,90,1.5,2,dotMotionPracticeEasy,dotMotionPracticeEasy,180,10800,1,49.36520600318909,,,0.5,,2,,0,0
+2,500.0,0.8,3.0,0.01,90,57,27,151018,2018-10-18-11-14-00,2018-10-18-11-14-53,60,90,1.5,3,dotMotionPracticeEasy,dotMotionPracticeEasy,180,10800,1,53.9152250289917,up,1.5014920234680176,0.8,251.0,3,up,1,0,How confident are you?,8,2.8699910640716553,How much effort did it require?,4,2.2703521251678467

@@ -1,0 +1,2 @@
+participant,age,scriptDate,trialNo,blockType,task,postFixationFrames,targetFrames,targetS,startTime,endTime,questionNo,questionText,elapsedTime,resp,rt,iti,choice,overallTrialNum,blockNumber
+2,19,151018,1,,belief,,9999,599940,2018-10-17-11-21-31,2018-10-17-11-30-10,1,"Overall, how much did you believe the accuracy feedback you received after you make each response?",519.53755705,4,25.6862126831,0.3,,1,1
