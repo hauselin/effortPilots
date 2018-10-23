@@ -1,0 +1,181 @@
+---
+title: "Pilot 1-1"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, eval=TRUE, results='hide', warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+rm(list = ls())
+setwd("/Users/Hause/Dropbox/Working Projects/Effort/Pilot") # set working directory
+# load("analysis_pilot11.RData")
+# save.image("analysis_pilot11.RData")
+library(tidyverse); library(data.table); library(broom); library(dtplyr); library(lme4); library(lmerTest); library(ggbeeswarm); library(cowplot)
+source("/Users/Hause/Dropbox/Working Datasets/functionsR/helperFunctions.R")
+```
+
+```{r read dotMotionDST data, eval=TRUE, results='hide', warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+subjectData <- './Pilot1-1 Data' # path to data directory (do not include / at the end!!!)
+
+filesinDir <- list.files(subjectData, full.names = T) # get relative paths to all files/directories in raw data folder
+filesToRead <- filesinDir[grep(pattern = "dotMotionDST.csv", x = filesinDir)] # find matching files to read
+length(filesToRead)
+
+dataRaw <- lapply(1:length(filesToRead), function(x) tbl_dt(fread(filesToRead[x]))) # read all matching files and store in a list
+dataRaw <- tbl_dt(rbindlist(dataRaw)) # convert that list of dataframe to one dataframe
+data <- copy(dataRaw) # make a copy of the data
+data[, unique(blockType)]
+data[, unique(participant)]
+```
+
+
+```{r dst choice ~ trialType, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+avg_dstChoice <- data[, .(choiceLowHighEffort = mean(choiceLowHighEffort, na.rm = T), rt = mean(rt, na.rm = T)), keyby = .(participant, trialType)]
+
+grandavg_dstChoice <- seWithin(data = avg_dstChoice, measurevar = c("choiceLowHighEffort", "rt"), withinvars = c("trialType"), idvar = "participant")
+
+plot_dstChoice <- ggplot(grandavg_dstChoice$choiceLowHighEffort, aes(trialType, choiceLowHighEffort)) +
+    geom_quasirandom(data = avg_dstChoice, alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = choiceLowHighEffort - ci, ymax = choiceLowHighEffort + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(-0.1, 1.1)) +
+    labs(x = "options presented", col = "participant id", y = "higher effort option chosen (proportion)\n(lower = more effort avoidant)")
+plot_dstChoice
+```
+
+
+```{r dst choiceRT ~ trialType, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+plot_dstChoiceRT <- ggplot(grandavg_dstChoice$rt, aes(trialType, rt)) +
+    geom_quasirandom(data = avg_dstChoice, alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = rt - ci, ymax = rt + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    # scale_x_discrete(labels = c("10 vs 100 dots", "10 vs 500 dots", "100 vs 500 dots")) +
+    labs(x = "options presented", col = "participant id", y = "choice rt")
+plot_dstChoiceRT
+
+plot_grid(plot_dstChoice, plot_dstChoiceRT, nrow = 2)
+ggsave("./Pilot1-1 Figures/dst_choice_choiceRT.jpg", height = 10, width = 12)
+```
+
+
+
+
+```{r dst acc ~ effortLevel, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+avg_dotMotion <- data[, .(dotMotion_acc = mean(dotMotion_acc, na.rm = T), dotMotion_rt = mean(dotMotion_rt, na.rm = T)), by = .(participant, dotMotion_nDots)]
+avg_dotMotion
+
+grandavg_dotMotion <- seWithin(data = na.omit(avg_dotMotion), measurevar = c("dotMotion_acc", "dotMotion_rt"), withinvars = c("dotMotion_nDots"), idvar = "participant")
+
+plot_dotMotionACC <- ggplot(grandavg_dotMotion$dotMotion_acc, aes(as.factor(dotMotion_nDots), dotMotion_acc)) +
+    geom_quasirandom(data = na.omit(avg_dotMotion), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = dotMotion_acc - ci, ymax = dotMotion_acc + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(-0.1, 1.1)) +
+    labs(x = "dots  (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "dot motion accuracy during DST")
+plot_dotMotionACC
+```
+
+
+```{r dst rt ~ effortLevel, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+plot_dotMotionRT <- ggplot(grandavg_dotMotion$dotMotion_rt, aes(as.factor(dotMotion_nDots), dotMotion_rt)) +
+    geom_quasirandom(data = na.omit(avg_dotMotion), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = dotMotion_rt - ci, ymax = dotMotion_rt + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    labs(x = "dots  (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "dot motion rt during DST")
+plot_dotMotionRT
+
+plot_grid(plot_dotMotionACC, plot_dotMotionRT, nrow = 2)
+ggsave("./Pilot1-1 Figures/dst_dotMotion_acc_rt.jpg", height = 10, width = 7)
+```
+
+
+
+```{r belief data ~ effortLevel, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+filesinDir <- list.files("./Pilot1-1 Data", full.names = T) # get relative paths to all files/directories in raw data folder
+filesToRead <- filesinDir[grep(pattern = "belief.csv", x = filesinDir)] # find matching files to read
+length(filesToRead)
+
+#### read all data into R ####
+dataBelief <- lapply(1:length(filesToRead), function(x) tbl_dt(fread(filesToRead[x]))) # read all matching files and store in a list
+dataBelief <- tbl_dt(rbindlist(dataBelief)) # convert that list of dataframe to one dataframe
+
+plot_belief <- ggplot(dataBelief, aes(task, resp)) +
+    geom_quasirandom(alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    # stat_summary(fun.y = mean, geom = 'point', shape = 95, size = 6, position = position_dodge(0.5)) +
+    # stat_summary(fun.data = mean_cl_normal, geom = 'errorbar', width = 0, size = 1.1, position = position_dodge(0.5)) +
+    scale_y_continuous(breaks = 1:9, limits = c(1, 9)) +
+    labs(x = "degree of belief in task accuracy feedback (no deception yet!)", y = 'rating', col = 'participant id')
+plot_belief
+
+ggsave("./Pilot1-1 Figures/belief_noDeception.jpg", height = 7, width = 7)
+
+```
+
+
+```{r forcedChoice data, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+filesinDir <- list.files("./Pilot1-1 Data", full.names = T) # get relative paths to all files/directories in raw data folder
+filesToRead <- filesinDir[grep(pattern = "dotMotionForced.csv", x = filesinDir)] # find matching files to read
+length(filesToRead)
+
+#### read all data into R ####
+dataForcedChoice <- lapply(1:length(filesToRead), function(x) tbl_dt(fread(filesToRead[x]))) # read all matching files and store in a list
+dataForcedChoice <- tbl_dt(rbindlist(dataForcedChoice)) # convert that list of dataframe to one dataframe
+```
+
+```{r plot forcedChoice acc, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+dataForcedChoice2 <- select(dataForcedChoice, participant, effortLevel, nDots, coherence, acc, rt, ratingConfidence_resp, ratingEffort_resp)
+
+avg_forcedChoice <- dataForcedChoice2[, .(acc = mean(acc, na.rm = T), rt = mean(rt, na.rm = T),
+                                          confidence = mean(ratingConfidence_resp, na.rm = T), effort = mean(ratingEffort_resp, na.rm = T)), 
+                                      keyby = .(participant, nDots)]
+avg_forcedChoice
+
+grandavg_forcedChoice <- seWithin(data = na.omit(avg_forcedChoice), measurevar = c("acc", "rt", "confidence", "effort"), withinvars = c("nDots"), idvar = "participant")
+
+plot_forcedChoiceACC <- ggplot(grandavg_forcedChoice$acc, aes(as.factor(nDots), acc)) +
+    geom_quasirandom(data = na.omit(avg_forcedChoice), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = acc - ci, ymax = acc + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1.0), limits = c(-0.2, 1.1)) +
+    labs(x = "dots (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "accuracy (forced choice)")
+plot_forcedChoiceACC
+```
+
+```{r plot forcedChoice rt, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+plot_forcedChoiceRT <- ggplot(grandavg_forcedChoice$rt, aes(as.factor(nDots), rt)) +
+    geom_quasirandom(data = na.omit(avg_forcedChoice), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = rt - ci, ymax = rt + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    labs(x = "dots  (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "rt (forced choice)")
+plot_forcedChoiceRT
+
+plot_grid(plot_forcedChoiceACC, plot_forcedChoiceRT, nrow = 2)
+ggsave("./Pilot1-1 Figures/dotMotion_forcedChoice_acc_rt.jpg", height = 10, width = 7)
+```
+
+```{r plot forcedChoice confidence, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+plot_forcedChoiceConfidence <- ggplot(grandavg_forcedChoice$confidence, aes(as.factor(nDots), confidence)) +
+    geom_quasirandom(data = na.omit(avg_forcedChoice), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = confidence - ci, ymax = confidence + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    scale_y_continuous(breaks = 1:9, limits = c(1, 9)) +
+    labs(x = "dots  (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "self-report confidence (forced choice)")
+plot_forcedChoiceConfidence
+```
+
+```{r plot forcedChoice effort, eval=TRUE, results='show', warning=FALSE, message=FALSE, echo=FALSE, include=TRUE}
+plot_forcedChoiceEffort <- ggplot(grandavg_forcedChoice$effort, aes(as.factor(nDots), effort)) +
+    geom_quasirandom(data = na.omit(avg_forcedChoice), alpha = 1, dodge = 0.5, size = 2, aes(col = as.factor(participant))) +
+    geom_point(position = position_dodge(0.5), shape = 95, size = 6) +
+    geom_errorbar(aes(ymin = effort - ci, ymax = effort + ci), position = position_dodge(0.5), width = 0, size = 1.1) +
+    scale_y_continuous(breaks = 1:9, limits = c(1, 9)) +
+    labs(x = "dots  (5%, 6%, 7%, 8% coherence)", col = "participant id", y = "self-report effort (forced choice)")
+plot_forcedChoiceEffort
+
+plot_grid(plot_forcedChoiceConfidence, plot_forcedChoiceEffort, nrow = 2)
+ggsave("./Pilot1-1 Figures/doMotion_forcedChoice_confidence_effort.jpg", height = 10, width = 7)
+
+```
+
